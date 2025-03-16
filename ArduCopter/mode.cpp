@@ -179,6 +179,13 @@ Mode *Copter::mode_from_mode_num(const Mode::Number mode)
             break;
 #endif
 
+//MG
+#if MODE_GOTOLOCATION_ENABLED == ENABLED
+        case Mode::Number::GOTO_LOCATION:
+            ret = &mode_go_to_location;
+            break;
+#endif
+
         default:
             break;
     }

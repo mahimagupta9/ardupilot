@@ -56,6 +56,11 @@ protected:
     // all data loaded
     bool terrain_database_required() const override;
 
+// MG
+#if MODE_GOTOLOCATION_ENABLED
+    bool pre_select_flight_mode_checks(bool display_failure);
+#endif
+
 private:
 
     // actually contains the pre-arm checks.  This is wrapped so that

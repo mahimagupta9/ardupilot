@@ -592,6 +592,10 @@ void Copter::ten_hz_logging_loop()
         camera_mount.write_log();
     }
 #endif
+// MG
+#if MODE_GOTOLOCATION_ENABLED
+    mode_goto_loc_flight_plan();
+#endif
 }
 
 // twentyfive_hz_logging - should be run at 25hz

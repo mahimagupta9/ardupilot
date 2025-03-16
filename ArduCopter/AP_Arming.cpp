@@ -70,6 +70,10 @@ bool AP_Arming_Copter::run_pre_arm_checks(bool display_failure)
 #if AP_AIRSPEED_ENABLED
         & AP_Arming::airspeed_checks(display_failure)
 #endif
+// MG
+#if MODE_GOTOLOCATION_ENABLED
+        & pre_select_flight_mode_checks(display_failure)
+#endif
         & AP_Arming::pre_arm_checks(display_failure);
 }
 
@@ -662,9 +666,29 @@ bool AP_Arming_Copter::mandatory_checks(bool display_failure)
     if (!alt_checks(display_failure)) {
         result = false;
     }
-
+//MG
+// to make it a mandatory check
+#if MODE_GOTOLOCATION_ENABLED
+    if (!pre_select_flight_mode_checks(display_failure)) {
+        result = false;
+    }
+#endif
+    
     return result & AP_Arming::mandatory_checks(display_failure);
 }
+
+// MG
+#if MODE_GOTOLOCATION_ENABLED
+bool AP_Arming_Copter::pre_select_flight_mode_checks(bool display_failure)
+{
+    if(copter.flightmode->mode_number() != Mode::Number::GOTO_LOCATION)
+    {
+        check_failed(true, "Wrong FlightMode: Not Go-to-Location");
+        return false;
+    }
+    return true;
+}
+#endif
 
 void AP_Arming_Copter::set_pre_arm_check(bool b)
 {

@@ -95,7 +95,7 @@ public:
         AUTOROTATE =   26,  // Autonomous autorotation
         AUTO_RTL =     27,  // Auto RTL, this is not a true mode, AUTO will report as this mode if entered to perform a DO_LAND_START Landing sequence
         TURTLE =       28,  // Flip over after crash
-
+        GOTO_LOCATION = 50, //MG full automatic fly to wp/location and land
         // Mode number 127 reserved for the "drone show mode" in the Skybrush
         // fork at https://github.com/skybrush-io/ardupilot
     };
@@ -1973,4 +1973,32 @@ private:
     void warning_message(uint8_t message_n);    //Handles output messages to the terminal
 
 };
+#endif
+
+//MG
+#if MODE_GOTOLOCATION_ENABLED == ENABLED
+class Mode_GotoLocation : public Mode {
+
+    public:
+        // inherit constructor
+        using Mode::Mode;
+        Number mode_number() const override { return Number::GOTO_LOCATION; }
+    
+        bool init(bool ignore_checks) override;
+        void run() override;
+    
+        bool requires_GPS() const override { return true; }
+        bool has_manual_throttle() const override { return false; }
+        bool allows_arming(AP_Arming::Method method) const override { return true; };
+        bool has_user_takeoff(bool must_navigate) const override { return true; }
+        bool is_autopilot() const override { return true; }
+        void mode_goto_loc_flight_plan();    
+        void arm_motors();
+        void disarm_motors();
+    
+    protected:
+    
+        const char *name() const override { return "GOTO_LOCATION"; }
+        const char *name4() const override { return "GTLN"; }
+    };
 #endif
