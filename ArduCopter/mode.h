@@ -1992,13 +1992,37 @@ class Mode_GotoLocation : public Mode {
         bool allows_arming(AP_Arming::Method method) const override { return true; };
         bool has_user_takeoff(bool must_navigate) const override { return true; }
         bool is_autopilot() const override { return true; }
-        void mode_goto_loc_flight_plan();    
-        void arm_motors();
-        void disarm_motors();
-    
+        bool is_taking_off() const override { return flt_plan == FLIGHT_PLAN::TAKEOFF && !takeoff_complete; };
+        bool do_user_takeoff_start(float takeoff_alt_cm) override;
+        bool is_landing() const override { return landing_init_confirm; }
+        
+        bool takeoff_complete;      // true once takeoff has completed
+        bool landing_init_confirm;
+
+        enum class FLIGHT_PLAN : uint8_t {
+            STAND_BY,
+            ARM,
+            TAKEOFF,
+            GO_TO_WP,
+            LAND_AND_DISARM,
+        };
+        FLIGHT_PLAN flt_plan;
+
     protected:
     
         const char *name() const override { return "GOTO_LOCATION"; }
         const char *name4() const override { return "GTLN"; }
-    };
+    
+    private:
+    
+        void pos_control_start();
+        void takeoff_run();   
+        bool arm_motors();
+        void disarm_motors();
+        void mode_goto_loc_takeoff();
+        bool init_landing();
+        void start_landing();
+
+        bool mission_completed;
+};
 #endif

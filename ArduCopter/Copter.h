@@ -227,6 +227,7 @@ public:
     friend class ModeZigZag;
     friend class ModeAutorotate;
     friend class ModeTurtle;
+    friend class Mode_GotoLocation; //MG
 
     friend class _AutoTakeoff;
 
@@ -1056,7 +1057,6 @@ private:
 //MG
 #if MODE_GOTOLOCATION_ENABLED == ENABLED
     Mode_GotoLocation mode_go_to_location;
-    void mode_goto_loc_flight_plan();
 #endif
 
     // mode.cpp
