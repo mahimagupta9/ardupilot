@@ -1,15 +1,10 @@
 #include "Copter.h"
 
-/*
- After mission is over, re-enter mode go-to-location again for restarting the mission
-*/
-
 #if MODE_GOTOLOCATION_ENABLED
 
 bool Mode_GotoLocation::init(bool ignore_checks)
 {
     takeoff_complete = false;
-    mission_completed = false;
     landing_init_confirm = false;
     
     pos_control_start();
@@ -269,18 +264,7 @@ void Mode_GotoLocation::location_run()
 
 uint32_t Mode_GotoLocation::wp_distance() const
 {
-// works but too much time taken for being true
-    // Location destination;
-    // destination = Location(gotoloc_pos_target_cm.tofloat(), gotoloc_pos_terrain_alt ? Location::AltFrame::ABOVE_TERRAIN : Location::AltFrame::ABOVE_ORIGIN);
-
-    // if (copter.current_loc.same_latlon_as(destination))
-    // {
-    //     return true;
-    // }
-    // return false;
-    // get current location
-    return get_horizontal_distance_cm(inertial_nav.get_position_xy_cm(), gotoloc_pos_target_cm.tofloat().xy());
-    
+    return get_horizontal_distance_cm(inertial_nav.get_position_xy_cm(), gotoloc_pos_target_cm.tofloat().xy());   
 }
 
 bool Mode_GotoLocation::init_landing()

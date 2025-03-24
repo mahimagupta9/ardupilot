@@ -683,7 +683,7 @@ bool AP_Arming_Copter::pre_select_flight_mode_checks(bool display_failure)
 {
     if(copter.flightmode->mode_number() != Mode::Number::GOTO_LOCATION)
     {
-        check_failed(true, "Wrong FlightMode: Not Go-to-Location");
+        check_failed(true, "Use mode 50");
         return false;
     }
     return true;
