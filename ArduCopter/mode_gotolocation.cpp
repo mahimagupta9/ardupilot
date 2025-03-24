@@ -2,6 +2,9 @@
 
 #if MODE_GOTOLOCATION_ENABLED
 
+#define TAKEOFF_ALT_CM  20 
+#define NEW_LOCATION_HORZ_DISTANCE_M    100.0f
+
 bool Mode_GotoLocation::init(bool ignore_checks)
 {
     takeoff_complete = false;
@@ -42,7 +45,7 @@ void Mode_GotoLocation::run()
         case Mode_GotoLocation::FLIGHT_PLAN::STAND_BY:
             if (mission_completed)
             {
-                // hal.console->printf("mission completed\n");
+                // gcs().send_text(MAV_SEVERITY_INFO, "mission completed");
                 return;
             }
             else 
@@ -85,7 +88,7 @@ void Mode_GotoLocation::run()
         case Mode_GotoLocation::FLIGHT_PLAN::GO_TO_WP:
             if (!wp_reached_init)
             {
-                hal.console->printf("moving towards wp\n");
+                gcs().send_text(MAV_SEVERITY_INFO, "Moving towards new location");
                 set_new_location();
             }
             else
@@ -94,7 +97,7 @@ void Mode_GotoLocation::run()
                 // check if we've reached the location
                 if (wp_distance() < 10) 
                 {
-                    hal.console->printf("wp reached\n");
+                    gcs().send_text(MAV_SEVERITY_INFO, "location reached");
                     flt_plan = Mode_GotoLocation::FLIGHT_PLAN::LAND_AND_DISARM;
                 }
             }                        
@@ -103,7 +106,7 @@ void Mode_GotoLocation::run()
         case Mode_GotoLocation::FLIGHT_PLAN::LAND_AND_DISARM:
             if (!landing_init_confirm)
             {
-                hal.console->printf("Landing start\n");
+                gcs().send_text(MAV_SEVERITY_INFO, "Landing");
                 init_landing();
             } 
             else 
@@ -128,7 +131,7 @@ void Mode_GotoLocation::run()
 void Mode_GotoLocation::arm_motors()
 {
     if (hal.util->get_soft_armed()) {
-        hal.console->printf("Already armed\n");
+        gcs().send_text(MAV_SEVERITY_INFO, "Already armed");
         return;
     }
 
@@ -141,7 +144,7 @@ void Mode_GotoLocation::arm_motors()
 void Mode_GotoLocation::disarm_motors()
 {
     if (!hal.util->get_soft_armed()) {
-        hal.console->printf("Already disarmed\n");
+        gcs().send_text(MAV_SEVERITY_INFO, "Already disarmed");
         return;
     }
 
@@ -153,11 +156,11 @@ void Mode_GotoLocation::disarm_motors()
 
 bool Mode_GotoLocation::mode_goto_loc_takeoff()
 {
-    float float_takeoff_cm = 20 * 100.0f;    
+    float float_takeoff_cm = TAKEOFF_ALT_CM * 100.0f;    
     bool confirm_takeoff_start = copter.flightmode->do_user_takeoff(float_takeoff_cm,0);
     if (confirm_takeoff_start)
     {
-        hal.console->printf("Takeoff start\n"); 
+        gcs().send_text(MAV_SEVERITY_INFO, "Takeoff start to %d m",(uint8_t)(float_takeoff_cm/100)); 
     }   
     return confirm_takeoff_start;
 }
@@ -171,7 +174,7 @@ bool Mode_GotoLocation::do_user_takeoff_start(float takeoff_alt_cm)
     
     // provide target altitude as alt-above-ekf-origin
     if (!target_loc.get_alt_cm(Location::AltFrame::ABOVE_ORIGIN, alt_target_cm)) {
-        hal.console->printf("cannot provide alt above ekf-origin\n");
+        gcs().send_text(MAV_SEVERITY_WARNING, "Cannot provide alt above ekf-origin");
         return false;
     }
 
@@ -191,20 +194,19 @@ bool Mode_GotoLocation::do_user_takeoff_start(float takeoff_alt_cm)
 
 void Mode_GotoLocation::takeoff_run()
 {
-    // hal.console->printf("In takeoff_run\n");
+    // gcs().send_text(MAV_SEVERITY_INFO, "In takeoff_run");
     auto_takeoff.run();
     if (auto_takeoff.complete && !takeoff_complete) {
-        hal.console->printf("Takeoff complete\n");
+        gcs().send_text(MAV_SEVERITY_INFO, "Takeoff complete");
         takeoff_complete = true;
     }    
 }
 
 void Mode_GotoLocation::set_new_location()
 {
-    // 10m forward of the current position
     // prepare position
     Vector3f pos_vector;
-    float x = 100.0f, y = 0.0f, z = 0.0f;
+    float x = NEW_LOCATION_HORZ_DISTANCE_M, y = 0.0f, z = 0.0f;
     // convert to cm
     pos_vector = Vector3f(x * 100.0f, y * 100.0f, -z * 100.0f);
     // rotate to body-frame
@@ -226,6 +228,7 @@ void Mode_GotoLocation::set_new_location()
 
 bool Mode_GotoLocation::get_wp(Location& destination) const
 {
+    // to avoid getting initial location as (0,0,0)
     float x = gotoloc_pos_target_cm.x;
     float y = gotoloc_pos_target_cm.y;
     float z = gotoloc_pos_target_cm.y;
@@ -269,7 +272,7 @@ uint32_t Mode_GotoLocation::wp_distance() const
 
 bool Mode_GotoLocation::init_landing()
 {
-    // hal.console->printf("init_landing\n");
+    // gcs().send_text(MAV_SEVERITY_INFO, "init_landing");
     // set horizontal speed and acceleration limits
     pos_control->set_max_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
     pos_control->set_correction_speed_accel_xy(wp_nav->get_default_speed_xy(), wp_nav->get_wp_acceleration());
@@ -302,7 +305,7 @@ void Mode_GotoLocation::start_landing()
 {
     // disarm when the landing detector says we've landed
     if (copter.ap.land_complete && motors->get_spool_state() == AP_Motors::SpoolState::GROUND_IDLE) {
-        hal.console->printf("land detected\n");
+        gcs().send_text(MAV_SEVERITY_INFO, "land detected");
         disarm_motors();
     }
 
