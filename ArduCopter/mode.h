@@ -1995,9 +1995,13 @@ class Mode_GotoLocation : public Mode {
         bool is_taking_off() const override { return flt_plan == FLIGHT_PLAN::TAKEOFF && !takeoff_complete; };
         bool do_user_takeoff_start(float takeoff_alt_cm) override;
         bool is_landing() const override { return landing_init_confirm; }
-        
+        bool in_guided_mode() const override { return true; }
+        bool get_wp(Location &loc) const override;
+
         bool takeoff_complete;      // true once takeoff has completed
         bool landing_init_confirm;
+        Vector3p gotoloc_pos_target_cm; 
+        bool gotoloc_pos_terrain_alt; 
 
         enum class FLIGHT_PLAN : uint8_t {
             STAND_BY,
@@ -2006,23 +2010,27 @@ class Mode_GotoLocation : public Mode {
             GO_TO_WP,
             LAND_AND_DISARM,
         };
-        FLIGHT_PLAN flt_plan;
+        FLIGHT_PLAN flt_plan = FLIGHT_PLAN::STAND_BY;
 
     protected:
     
         const char *name() const override { return "GOTO_LOCATION"; }
         const char *name4() const override { return "GTLN"; }
-    
+        uint32_t wp_distance() const override;
+            
     private:
     
         void pos_control_start();
         void takeoff_run();   
-        bool arm_motors();
+        void arm_motors();
         void disarm_motors();
-        void mode_goto_loc_takeoff();
+        bool mode_goto_loc_takeoff();
         bool init_landing();
         void start_landing();
+        void location_run();
+        void set_new_location();
 
         bool mission_completed;
+        bool wp_reached_init;
 };
 #endif
